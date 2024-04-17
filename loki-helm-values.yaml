@@ -1,0 +1,64 @@
+---
+loki:
+  annotations:
+    sidecar.istio.io/inject: "true"
+  schema_config:
+    configs:
+      - from: "2023-01-01"
+        object_store: azure
+        schema: v12
+        store: tsdb
+        index:
+          period: 24h
+          prefix: loki_index_
+  storage:
+    type: azure
+    azure:
+      accountName: ${STORAGE-ACCOUNT-NAME}
+      accountKey: ${STORAGE-ACCOUNT-KEY}
+      useManagedIdentity: false
+      useFederatedToken: false
+      userAssignedId: null
+      requestTimeout: null
+      endpointSuffix: null
+      container_name: loki
+    tsdb_shipper:
+      shared_store: azure
+      active_index_directory: /data/tsdb-index
+      cache_location: /data/tsdb-cache
+      index_gateway_client:
+        server_address: dns:///index-gateway.loki.svc.cluster.local:9095
+  extraArgs:
+    - "-config.expand-env=true"
+  extraEnvFrom:
+    - secretRef:
+        name: loki-az-storage-account
+write:
+  extraArgs:
+    - "-config.expand-env=true"
+  extraEnvFrom:
+    - secretRef:
+        name: loki-az-storage-account
+read:
+  extraArgs:
+    - "-config.expand-env=true"
+  extraEnvFrom:
+    - secretRef:
+        name: loki-az-storage-account
+backend:
+  extraArgs:
+    - "-config.expand-env=true"
+  extraEnvFrom:
+    - secretRef:
+        name: loki-az-storage-account
+test:
+  enabled: false
+monitoring:
+  dashboards:
+    enabled: false
+  selfMonitoring:
+    enabled: false
+    grafanaAgent:
+      installOperator: false
+  lokiCanary:
+    enabled: false
